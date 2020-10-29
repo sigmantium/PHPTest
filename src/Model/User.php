@@ -1,131 +1,123 @@
 <?php
 
-namespace App\Model;
+namespace Src\Model;
 
 class User
 {
 
-    /**
-     * [$id primary key holder]
-     *
-     * @var [int]
-     */
-    private $id;
+    private $db = null;
 
-    /**
-     * [$firstname Users first name]
-     *
-     * @var [string]
-     * VARCHAR(100)
-     * NOT NULL
-     */
-	private $firstName;
-
-    /**
-     * [$lastname Users last name]
-     *
-     * @var [string]
-     * VARCHAR(100)
-     * NOT NULL
-     */
-    private $lastName;
-
-    /**
-     * [$email Users email address, used for corrospondence]
-     *
-     * @var [string]
-     * VARCHAR(255)
-     * NOT NULL
-     */
-    private $email;
-
-    /**
-     * [$mobilephone Users contact phone number]
-     *
-     * @var [string]
-     * VARCHAR(20)
-     */
-    private $mobilePhone = null;
-
-    /**
-     * [$admin Flag for if user has admin access]
-     *
-     * @var [Boolean]
-     */
-    private $admin = 0;
-
-
-    public function __construct(int $id, string $firstName, string $lastName, string $email, string $mobilePhone=null, bool $admin=0  )
+    public function __construct( $db )
     {
-        $this->id = $id;
-        $this->firstName = $firstName;
-        $this->lastName = $lastName;
-        $this->email = $email;
-        $this->mobilePhone = $mobilePhone;
-        $this->admin = $admin;
+        $this->db = $db;
     }
 
-     public function getId(): ?int
+    public function findAll()
     {
-        return $this->id;
+        $statement = "
+            SELECT
+                id, firstname, lastname, mobilephone, email, admin
+            FROM
+                user;
+        ";
+
+        try {
+            $statement = $this->db->query($statement);
+            $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }
     }
 
-    public function getFullName(): ?string
+    public function find($id)
     {
-        return $this->firstName." ".$this->lastName;
+        $statement = "
+            SELECT
+                id, firstname, lastname, mobilephone, email, admin
+            FROM
+                user
+            WHERE id = ?;
+        ";
+
+        try {
+            $statement = $this->db->prepare($statement);
+            $statement->execute(array($id));
+            $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }
     }
 
-    public function getFirstName(): ?string
+    public function insert(Array $input)
     {
-        return $this->firstName;
+        $statement = "
+            INSERT INTO user
+                (firstname, lastname, mobilephone, email, admin)
+            VALUES
+                (:firstname, :lastname, :mobilephone, :email, :admin);
+        ";
+
+        try {
+            $statement = $this->db->prepare($statement);
+            $statement->execute(array(
+                'firstname' => $input['firstname'],
+                'lastname'  => $input['lastname'],
+                'mobilephone' => $input['mobilephone'] ?? null,
+                'email' => $input['email'],
+                'admin' => $input['admin'] ?? false
+            ));
+            return $statement->rowCount();
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }
     }
 
-    public function getLastName(): ?string
+    public function update($id, Array $input)
     {
-        return $this->lastName;
+        $statement = "
+            UPDATE user
+            SET
+                firstname = :firstname,
+                lastname  = :lastname,
+                mobilephone = :mobilephone,
+                email = :email,
+                admin = :admin
+            WHERE id = :id;
+        ";
+
+        try {
+            $statement = $this->db->prepare($statement);
+            $statement->execute(array(
+                'id' => (int) $id,
+                'firstname' => $input['firstname'],
+                'lastname'  => $input['lastname'],
+                'mobilephone' => $input['mobilephone'] ?? null,
+                'email' => $input['email'],
+                'admin' => $input['admin'] ?? false
+            ));
+            return $statement->rowCount();
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }
     }
 
-    public function setFirstName(string $firstName): void
+    public function delete($id)
     {
-        $this->firstName = $firstName;
+        $statement = "
+            DELETE FROM user
+            WHERE id = :id;
+        ";
+
+        try {
+            $statement = $this->db->prepare($statement);
+            $statement->execute(array('id' => $id));
+            return $statement->rowCount();
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }
     }
-
-    public function setLastName(string $lastName): void
-    {
-        $this->lastName = $lastName;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): void
-    {
-        $this->email = $email;
-    }
-
-    public function getMobilePhone(): ?string
-    {
-        return $this->mobilePhone;
-    }
-
-    public function setMobilePhone(string $mobilePhone): void
-    {
-        $this->mobilePhone = $mobilePhone;
-    }
-
-    public function isAdmin(): ?bool
-    {
-        return $this->admin;
-    }
-
-    public function setAdmin(bool $admin): void
-    {
-        $this->admin = $admin;
-    }
-
-
 
 
 }
